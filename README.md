@@ -11,7 +11,7 @@ Before you begin, ensure you have the following installed:
 - Make (for building the project)
 - GCC (or another C++ compiler)
 - PostgreSQL (for database functionality)
-- Any other dependencies specific to your project (e.g., PostGIS for spatial data)
+- PostGIS for spatial data
 
 Setup:
 1. Clone the repository:
@@ -27,8 +27,10 @@ Setup:
 
 Running the Project:
 After building the project, you can run the program with the following commands:
+1. Compile using:
+   make
 
-1. Run the main program:
+2. Run the main program:
    ./main
 
 Usage:
@@ -41,18 +43,6 @@ For testing purposes, use the built-in queries and transformations on the provid
 
 Additional Configuration:
 If you need to modify configuration settings (such as database credentials or table structures), update the configuration file config.cfg or modify the connection setup within the code.
-
-License:
-This project is licensed under the MIT License - see the LICENSE.md file for details.
-
-Troubleshooting:
-- Make command not found?
-  Ensure that "make" is installed on your system. On Linux, you can install it using your package manager (e.g., sudo apt-get install make).
-  
-- PostgreSQL connection issues?
-  Check your connection settings, such as host, port, and credentials, to ensure you're connected to the right database.
-
-If you encounter other issues, feel free to open an issue on GitHub or check the documentation.
 
 Contributing:
 We welcome contributions to this project! If you'd like to contribute, please fork the repository, make your changes, and submit a pull request.
