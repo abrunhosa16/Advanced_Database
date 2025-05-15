@@ -11,15 +11,15 @@ conn = psycopg2.connect(
 )
 
 cur = conn.cursor()
-cur.execute("""SELECT s.name AS solution_name, 
+cur.execute('''SELECT s.name AS solution_name, 
             s.board, 
-            ST_Collect(DISTINCT s.tetro) AS tetros,
-            array_agg(DISTINCT t.name) AS tetros_names,
-            array_agg(DISTINCT t.color) AS tetros_colors
+            ST_Collect(s.tetro) AS tetros,
+            array_agg(s.tname) AS tetros_names,
+            array_agg(t.color) AS tetros_colors
             FROM solutions s 
             JOIN tetrominoes t
-            ON ST_Relate(s.tetro, t.geom, '*********')
-            GROUP BY s.name, s.board;""")
+            ON s.tname = t.name
+            GROUP BY s.name, s.board;''')
 
 rows = cur.fetchall()
 
@@ -40,12 +40,7 @@ for i, (solution_name, board_wkb, tetros_wkb, tetro_names, tetro_colors) in enum
         
         r, g, b, a = map(int, color.split(','))
         rgba_color = (r / 255, g / 255, b / 255)
-        #print(rgba_color)
         alpha_value = a / 255  
-        
-        print(name)
-        print(color)
-        print(tetro)
 
         x, y = tetro.exterior.xy
         ax.fill(x, y, alpha=alpha_value, edgecolor='black', linewidth=3, facecolor=rgba_color)
@@ -56,9 +51,9 @@ for i, (solution_name, board_wkb, tetros_wkb, tetro_names, tetro_colors) in enum
 
     plt.xticks(range(0, 7))
     plt.yticks(range(0, 6))
-    plt.title('{}'.format(name))
+    plt.title('{}'.format(solution_name))
     plt.xlabel('X')
     plt.ylabel('Y')
-    plt.grid(True)
+    #plt.grid(True)
     plt.axis('equal')
     plt.show()
