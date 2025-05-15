@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "db_utils.h"
 
-#define CONNINFO "host=localhost dbname=postgres user=postgres password=1234"
+#define CONNINFO "host=localhost dbname=postgres user=postgres password=BD2025"
 
 PGconn* connect_db() {
     PGconn *conn = PQconnectdb(CONNINFO);
