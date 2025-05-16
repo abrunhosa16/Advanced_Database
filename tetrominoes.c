@@ -19,11 +19,10 @@ void drop_table_tetrominoes(PGconn *conn) {
 
 }
 
-
 void create_tetrominoes_table(PGconn *conn) {
     const char *query = 
         "CREATE TABLE IF NOT EXISTS Tetrominoes ("
-        "name VARCHAR(50),"
+        "name VARCHAR(50) PRIMARY KEY,"
         "color VARCHAR(50),"
         "type VARCHAR(50),"
         "geom GEOMETRY(Polygon));";  
