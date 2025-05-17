@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "db_utils.h"
+#include "../db_utils.h"
 
 void drop_table_tetrominoes(PGconn *conn) {
     const char *query = 

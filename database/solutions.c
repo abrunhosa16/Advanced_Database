@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "db_utils.h"
+#include "../db_utils.h"
 
 void drop_table_solutions(PGconn *conn) {
     const char *query = 
@@ -47,11 +47,11 @@ void create_solutions_table(PGconn *conn) {
 void populate_solutions(PGconn *conn) {
     const char *query =
     "WITH board1 AS (SELECT geom AS board_geom FROM Puzzles WHERE name = 'Board1'), "
-    "     board2 AS (SELECT geom AS board_geom FROM Puzzles WHERE name = 'Board2') "
-    "     board3 AS (SELECT geom AS board_geom FROM Puzzles WHERE name = 'Board3') "
-    "     board4 AS (SELECT geom AS board_geom FROM Puzzles WHERE name = 'Board4') "
-    "     board5 AS (SELECT geom AS board_geom FROM Puzzles WHERE name = 'Board5') "
-    "     board6 AS (SELECT geom AS board_geom FROM Puzzles WHERE name = 'Board6') "
+    "     board2 AS (SELECT geom AS board_geom FROM Puzzles WHERE name = 'Board2'), "
+    "     board3 AS (SELECT geom AS board_geom FROM Puzzles WHERE name = 'Board3'), "
+    "     board4 AS (SELECT geom AS board_geom FROM Puzzles WHERE name = 'Board4'), "
+    "     board5 AS (SELECT geom AS board_geom FROM Puzzles WHERE name = 'Board5'), "
+    "     board6 AS (SELECT geom AS board_geom FROM Puzzles WHERE name = 'Board6'), "
     "     board7 AS (SELECT geom AS board_geom FROM Puzzles WHERE name = 'Board7') "
 
     "INSERT INTO Solutions (name, board, type, tName,tetro) "

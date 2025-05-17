@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "db_utils.h"
+#include "../db_utils.h"
 
 
 void drop_table_puzzles(PGconn *conn) {

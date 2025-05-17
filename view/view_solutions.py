@@ -1,14 +1,13 @@
 import psycopg2
 from shapely import wkb 
 import matplotlib.pyplot as plt
+import json
 
-conn = psycopg2.connect(
-    dbname = 'postgres',
-    user = 'postgres',
-    password = 'BD2025',
-    host = 'localhost',
-    port = '5432'
-)
+
+with open('config.json') as f:
+    config = json.load(f)
+
+conn = psycopg2.connect(**config)
 
 cur = conn.cursor()
 cur.execute('''SELECT s.name AS solution_name, 

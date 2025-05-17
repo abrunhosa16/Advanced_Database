@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -I/usr/include/postgresql
 LDFLAGS = -lpq
-SRC = main.c db_utils.c tetrominoes.c puzzles.c solutions.c
+SRC = main.c db_utils.c database/tetrominoes.c database/puzzles.c database/solutions.c
 OBJ = $(SRC:.c=.o)
 TARGET = main
 
