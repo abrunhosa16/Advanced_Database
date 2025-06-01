@@ -2,7 +2,7 @@ import psycopg2
 from shapely import wkb 
 import matplotlib.pyplot as plt
 import json
-
+import os
 
 with open('config.json') as f:
     config = json.load(f)
@@ -26,6 +26,8 @@ def show_solutions_for_board(board_name):
     ''', (board_name,))
 
     rows = cur.fetchall()
+
+    os.makedirs('output', exist_ok=True)
 
     for solution_name, board_wkb, tetros_wkb, tetro_names, tetro_colors in rows:
         board = wkb.loads(board_wkb)       
@@ -54,7 +56,9 @@ def show_solutions_for_board(board_name):
         plt.xlabel('X')
         plt.ylabel('Y')
         plt.axis('equal')
-        plt.show()
+        
+        plt.savefig(f'output/{solution_name}.png')
+        plt.close()
 
 show_solutions_for_board("Board1")
 show_solutions_for_board("Board2")

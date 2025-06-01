@@ -44,7 +44,7 @@ st_rotate(Geom, Angle, Result) :-
     atomic_concat(Q1, '), ', Q2),
     number_atom(Angle, AngleAtom),
     atomic_concat(Q2, AngleAtom, Q3),
-    atomic_concat(Q3, '))', Query),
+    atomic_concat(Q3, ')', Query),
     db_import(Query, [], [row(Result)]).
 
 % Test predicate
