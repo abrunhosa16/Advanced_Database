@@ -27,7 +27,8 @@ def show_solutions_for_board(board_name):
 
     rows = cur.fetchall()
 
-    os.makedirs('output', exist_ok=True)
+    # Create output directory if it doesn't exist
+    os.makedirs('../images/solutions', exist_ok=True)
 
     for solution_name, board_wkb, tetros_wkb, tetro_names, tetro_colors in rows:
         board = wkb.loads(board_wkb)       
@@ -57,7 +58,7 @@ def show_solutions_for_board(board_name):
         plt.ylabel('Y')
         plt.axis('equal')
         
-        plt.savefig(f'output/{solution_name}.png')
+        plt.savefig(f'../images/output_solutions/{solution_name}.png')
         plt.close()
 
 show_solutions_for_board("Board1")

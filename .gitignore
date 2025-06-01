@@ -48,6 +48,7 @@ install_manifest.txt
 .project
 .cproject
 .settings/
+enviroment/
 
 # CLion / JetBrains IDEs
 .idea/
