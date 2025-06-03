@@ -1,6 +1,6 @@
-Practical Assignment of Advanced Topics in Databases
+# **Practical Assignment of Advanced Topics in Databases**
 
-Overview:
+**Overview:**
 This project implements a Tetromino Puzzle Solver that demonstrates advanced database concepts and techniques. The system focuses on solving puzzles using the seven distinct one-sided tetrominoes (I, O, T, J, L, S, Z) through a combination of:
 
 • Spatial Database Management: Using PostgreSQL with PostGIS extension to handle geometric shapes and spatial operations
@@ -8,7 +8,7 @@ This project implements a Tetromino Puzzle Solver that demonstrates advanced dat
 • Advanced Database APIs: Implementing efficient database operations through C and Python interfaces
 • Interactive Visualizations: Using Python and Matplotlib to display puzzles and solutions
 
-Part 1 - Database Structure:
+**Part 1 - Database Structure:**
 The project implements a spatial database using PostgreSQL with PostGIS extension, consisting of three main tables:
 
 1. Tetrominoes Table:
@@ -35,7 +35,7 @@ The project implements a spatial database using PostgreSQL with PostGIS extensio
      * position: Spatial position of the tetromino
      * rotation: Rotation angle of the tetromino
 
-Part 2 - YAP-PostgreSQL Integration:
+**Part 2 - YAP-PostgreSQL Integration:**
 The project includes a YAP-PostgreSQL integration that allows for deductive database operations. This integration is implemented through the following components:
 
 1. yap2pgsql.pl:
@@ -51,7 +51,7 @@ The project includes a YAP-PostgreSQL integration that allows for deductive data
    - Use db_close to disconnect
    - Use db_import(Query, Params, Result) for queries
 
-Part 3 - Python Visualization:
+**Part 3 - Python Visualization:**
 The project includes Python-based visualization tools for puzzles and solutions:
 
 1. view_backtracking_solutions.py:
@@ -66,7 +66,7 @@ The project includes Python-based visualization tools for puzzles and solutions:
      * High-resolution images (300 DPI)
      * Clear piece placement visualization
 
-Part 4 - Tetris Solver Implementation:
+**Part 4 - Tetris Solver Implementation:**
 The project implements a backtracking solver in Prolog (tetris_solver.pl) with the following features:
 
 1. Core Functions:
@@ -90,7 +90,7 @@ The project implements a backtracking solver in Prolog (tetris_solver.pl) with t
    - test_all_rotations/0: Tests all possible rotations
    - test_solver/0: Tests the complete solver
 
-Setup and Installation:
+**Setup and Installation:**
 Prerequisites:
 Before you begin, ensure you have the following installed:
 - Make (for building the project)
@@ -126,7 +126,7 @@ Installation Steps:
    pip install psycopg2-binary shapely matplotlib
    ```
 
-Running the Project:
+**Running the Project:**
 1. Compile the project:
    ```bash
    make clean    # Clean previous builds
@@ -135,8 +135,10 @@ Running the Project:
 
 2. Run the solver:
    ```prolog
-   ?- [tetris_solver].
-   ?- test_solver.
+   ?- [yap2pgsql].                    # Load YAP-PostgreSQL interface
+   ?- [tetris_solver].                # Load Tetris solver
+   ?- db_open('localhost', 5432, 'postgres', 'tvmarcon', '1234').  # Connect to database
+   ?- test_solver.                    # Run the solver
    ```
 
 3. Run visualizations:
@@ -144,5 +146,5 @@ Running the Project:
    python view/view_backtracking_solutions.py
    ```
 
-Configuration:
+**Configuration:**
 If you need to modify configuration settings (such as database credentials or table structures), update the configuration file config.json or modify the connection setup within the code.
