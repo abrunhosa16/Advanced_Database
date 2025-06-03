@@ -2,7 +2,11 @@
     db_open/5,
     db_close/0,
     db_query/2,
-    db_import/3
+    db_import/3,
+    st_difference/3,
+    st_translate/4,
+    st_rotate/3,
+    st_contains/3
 ]).
 
 :- load_foreign_files(['yap2pgsql'], [], init_predicates).
@@ -55,5 +59,17 @@ st_rotate(Geom, Angle, Result) :-
     number_atom(Angle, AngleAtom),
     atomic_concat(Q2, AngleAtom, Q3),
     atomic_concat(Q3, '), ST_MakePoint(0,0)), 0.0001)))', Query),
+    write('Debug - Query: '), write(Query), nl,
+    db_import(Query, [], [row(Result)]).
+
+st_contains(Geom1, Geom2, Result) :-
+    atomic_concat('\'', Geom1, G1),
+    atomic_concat(G1, '\'', G1Quote),
+    atomic_concat('\'', Geom2, G2),
+    atomic_concat(G2, '\'', G2Quote),
+    atomic_concat('SELECT ST_Contains(ST_MakeValid(ST_GeomFromText(', G1Quote, Q1),
+    atomic_concat(Q1, ')), ST_MakeValid(ST_GeomFromText(', Q2),
+    atomic_concat(Q2, G2Quote, Q3),
+    atomic_concat(Q3, ')))', Query),
     write('Debug - Query: '), write(Query), nl,
     db_import(Query, [], [row(Result)]).
