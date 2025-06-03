@@ -8,17 +8,6 @@ This project implements a Tetromino Puzzle Solver that demonstrates advanced dat
 • Advanced Database APIs: Implementing efficient database operations through C and Python interfaces
 • Interactive Visualizations: Using Python and Matplotlib to display puzzles and solutions
 
-The project implements a complete solution for:
-1. Storing and managing tetromino pieces and puzzle boards using spatial data types
-2. Solving puzzles through deductive reasoning using YAP-PostgreSQL integration
-3. Visualizing both puzzles and their solutions in an interactive manner
-
-Key Features:
-• Spatial Operations: Translation, rotation, and difference operations for tetromino manipulation
-• Puzzle Solving: Backtracking algorithm implementation in Prolog
-• Interactive Visualization: Real-time display of puzzles and solutions
-• Database Integration: Efficient storage and retrieval of spatial data
-
 Part 1 - Database Structure:
 The project implements a spatial database using PostgreSQL with PostGIS extension, consisting of three main tables:
 
@@ -55,39 +44,51 @@ The project includes a YAP-PostgreSQL integration that allows for deductive data
      * st_difference(Geom1, Geom2, Result): Calculates the difference between two geometries
      * st_translate(Geom, X, Y, Result): Moves a geometry by X,Y offset
      * st_rotate(Geom, Angle, Result): Rotates a geometry by specified angle
+     * st_contains(Geom1, Geom2, Result): Checks if Geom1 contains Geom2
 
 2. Database Connection:
    - Use db_open(Host, Port, DBName, User, Pass) to connect
    - Use db_close to disconnect
    - Use db_import(Query, Params, Result) for queries
 
-Example YAP usage:
-```prolog
-?- db_open('localhost', 5432, 'postgres', 'user', 'pass').
-?- st_translate('POLYGON((0 0, 2 0, 2 2, 0 2, 0 0))', 3, 4, Result).
-?- db_close.
-```
-
-Part 3 - Visualization:
+Part 3 - Python Visualization:
 The project includes Python-based visualization tools for puzzles and solutions:
 
-1. Available visualization scripts:
-   - view_puzzles.py: Visualizes puzzle boards
-   - view_solutions.py: Visualizes puzzle solutions
-   - view_tetrominoes.py: Visualizes tetromino pieces
+1. view_backtracking_solutions.py:
+   - Visualizes the backtracking solutions
+   - Features:
+     * Color-coded tetrominoes
+     * Grid-based display
+     * Piece labels
+     * Board holes visualization
+   - Output:
+     * Saves solutions as PNG files in images/backtracking_solutions/
+     * High-resolution images (300 DPI)
+     * Clear piece placement visualization
 
-2. Features:
-   - Interactive matplotlib visualizations
-   - Color-coded tetrominoes
-   - Grid-based display
-   - Support for multiple puzzles
+Part 4 - Tetris Solver Implementation:
+The project implements a backtracking solver in Prolog (tetris_solver.pl) with the following features:
 
-3. Running visualizations:
-```bash
-python view/view_puzzles.py  # View all puzzles
-python view/view_solutions.py  # View solutions
-python view/view_tetrominoes.py  # View tetromino pieces
-```
+1. Core Functions:
+   - get_puzzle/2: Retrieves puzzle geometry
+   - get_tetrominoes/1: Gets all available tetrominoes
+   - try_place_piece/4: Tests piece placement
+   - calculate_remaining_space/3: Computes available space
+   - try_place_piece_with_rotation/5: Tests piece placement with rotation
+   - try_all_rotations/4: Tests all possible rotations
+   - solve_puzzle/1: Main solver predicate
+   - solve_puzzle_recursive/4: Implements backtracking algorithm
+
+2. Testing Functions:
+   - test_db/0: Tests database connection
+   - test_geometries/0: Tests puzzle and tetromino geometries
+   - test_yap_translate/0: Tests translation operations
+   - test_yap_rotate/0: Tests rotation operations
+   - test_yap_difference/0: Tests difference operations
+   - test_yap_fit/0: Tests piece fitting
+   - test_all_positions/0: Tests all possible positions
+   - test_all_rotations/0: Tests all possible rotations
+   - test_solver/0: Tests the complete solver
 
 Setup and Installation:
 Prerequisites:
@@ -112,17 +113,27 @@ Installation Steps:
 3. Database Setup:
    Ensure your PostgreSQL database is set up correctly. You may need to import a sample database or configure the connection to your own instance.
 
+4. Python Environment Setup:
+   ```bash
+   python -m venv enviroment
+   source enviroment/bin/activate
+   pip install psycopg2-binary shapely matplotlib
+   ```
+
 Running the Project:
 1. Compile the project:
    make
 
-2. Run the main program:
-   ./main
+2. Run the solver:
+   ```prolog
+   ?- [tetris_solver].
+   ?- test_solver.
+   ```
 
 3. Run visualizations:
-   python view/view_puzzles.py
-   python view/view_solutions.py
-   python view/view_tetrominoes.py
+   ```bash
+   python view/view_backtracking_solutions.py
+   ```
 
 Configuration:
 If you need to modify configuration settings (such as database credentials or table structures), update the configuration file config.json or modify the connection setup within the code.
