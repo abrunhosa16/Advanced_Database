@@ -56,9 +56,7 @@ test_connection :-
     db_open('localhost', 5432, 'postgres', 'tvmarcon', '1234'),
     write('Connected to database'), nl,
     db_import('SELECT name, type FROM tetrominoes', [], Result),
-    write('Tetrominoes: '), write(Result), nl,
-    db_close,
-    write('Disconnected from database'), nl.
+    write('Tetrominoes: '), write(Result), nl.
 
 % Test rotation of all tetrominos
 test_rotate_all :-
@@ -151,6 +149,7 @@ run_all_tests :-
     test_rotate_all, nl,
     test_translate_all, nl,
     test_difference, nl,
+    db_close,
     write('All tests completed.'), nl.
 
 % To run all tests, use:
