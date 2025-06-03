@@ -4,7 +4,11 @@ import matplotlib.pyplot as plt
 import json
 import os
 
-with open('config.json') as f:
+# Get the absolute path to the project root directory
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Use absolute path for config.json
+with open(os.path.join(PROJECT_ROOT, 'config.json')) as f:
     config = json.load(f)
 
 conn = psycopg2.connect(**config)
@@ -28,7 +32,8 @@ def show_solutions_for_board(board_name):
     rows = cur.fetchall()
 
     # Create output directory if it doesn't exist
-    os.makedirs('../images/solutions', exist_ok=True)
+    output_dir = os.path.join(PROJECT_ROOT, 'images', 'output_solutions')
+    os.makedirs(output_dir, exist_ok=True)
 
     for solution_name, board_wkb, tetros_wkb, tetro_names, tetro_colors in rows:
         board = wkb.loads(board_wkb)       
@@ -58,7 +63,8 @@ def show_solutions_for_board(board_name):
         plt.ylabel('Y')
         plt.axis('equal')
         
-        plt.savefig(f'../images/output_solutions/{solution_name}.png')
+        output_path = os.path.join(output_dir, f'{solution_name}.png')
+        plt.savefig(output_path)
         plt.close()
 
 show_solutions_for_board("Board1")

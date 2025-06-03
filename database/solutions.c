@@ -163,7 +163,7 @@ void populate_solutions(PGconn *conn) {
             TetrominoPlacement p = s.pieces[j];
             snprintf(temp, sizeof(temp),
                 "SELECT '%s', %s.board_geom, 'MultiPolygon', t.name, "
-                "ST_Translate(ST_Rotate(t.geom, %s), %d, %d) "
+                "ST_Translate(ST_Rotate(t.geom, radians(%s)), %d, %d) "
                 "FROM Tetrominoes t, %s %s WHERE t.name = '%s' ",
                 s.solution_name, s.board_alias, p.rotation, p.dx, p.dy,
                 s.board_cte, s.board_alias, p.name
