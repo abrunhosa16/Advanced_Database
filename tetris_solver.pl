@@ -154,25 +154,36 @@ test_all_rotations :-
     write('Got piece I: '), write(IGeom), nl,
     try_all_rotations(Puzzle, IGeom, 1, 1).
 
-% Main predicate to solve the puzzle
+% Predicate to visualize the board with placed pieces
+visualize_board(Board, PlacedPieces) :-
+    write('Board state:'), nl,
+    write('  '), write(Board), nl,
+    write('Placed pieces:'), nl,
+    write('  '), write(PlacedPieces), nl.
+
+% Modified solve_puzzle to show the solution
 solve_puzzle(PuzzleName) :-
     write('Starting to solve puzzle: '), write(PuzzleName), nl,
     get_puzzle(PuzzleName, Puzzle),
     get_tetrominoes(Tetrominoes),
     write('Got tetrominoes: '), write(Tetrominoes), nl,
-    solve_puzzle_recursive(Puzzle, Tetrominoes).
+    solve_puzzle_recursive(Puzzle, Tetrominoes, [], PlacedPieces),
+    write('Solution found!'), nl,
+    visualize_board(Puzzle, PlacedPieces).
 
-% Recursive predicate to solve the puzzle
-solve_puzzle_recursive(Puzzle, []) :-
+% Modified recursive predicate to track placed pieces
+solve_puzzle_recursive(Puzzle, [], PlacedPieces, PlacedPieces) :-
     write('All pieces placed successfully!'), nl.
-solve_puzzle_recursive(Puzzle, [row(Name, Piece)|RestPieces]) :-
+solve_puzzle_recursive(Puzzle, [row(Name, Piece)|RestPieces], CurrentPlaced, FinalPlaced) :-
     write('Trying to place piece: '), write(Name), nl,
-    try_place_piece_with_backtracking(Puzzle, Piece, NewPuzzle),
-    write('Piece placed successfully, remaining pieces: '), write(RestPieces), nl,
-    solve_puzzle_recursive(NewPuzzle, RestPieces).
+    try_place_piece_with_backtracking(Puzzle, Piece, NewPuzzle, Position, Rotation),
+    write('Piece placed successfully at position '), write(Position), 
+    write(' with rotation '), write(Rotation), write(' degrees'), nl,
+    NewPlaced = [placed(Name, Position, Rotation)|CurrentPlaced],
+    solve_puzzle_recursive(NewPuzzle, RestPieces, NewPlaced, FinalPlaced).
 
-% Try to place a piece with backtracking
-try_place_piece_with_backtracking(Puzzle, Piece, NewPuzzle) :-
+% Modified try_place_piece_with_backtracking to return position and rotation
+try_place_piece_with_backtracking(Puzzle, Piece, NewPuzzle, Position, Rotation) :-
     between(0, 5, Dx),
     between(0, 4, Dy),
     member(Rotation, [0, 90, 180, 270]),
@@ -182,7 +193,8 @@ try_place_piece_with_backtracking(Puzzle, Piece, NewPuzzle) :-
     st_translate(RotatedPiece, Dx, Dy, TranslatedPiece),
     st_contains(Puzzle, TranslatedPiece, t),
     write('  Piece fits!'), nl,
-    calculate_remaining_space(Puzzle, TranslatedPiece, NewPuzzle).
+    calculate_remaining_space(Puzzle, TranslatedPiece, NewPuzzle),
+    Position = (Dx, Dy).
 
 % Test the solver
 test_solver :-
