@@ -1,4 +1,17 @@
-:- module(tetris_solver, [test_db/0, test_geometries/0, test_yap_translate/0, test_yap_rotate/0, test_yap_difference/0, test_yap_fit/0]).
+:- module(tetris_solver, [
+    test_db/0, 
+    test_geometries/0, 
+    test_yap_translate/0, 
+    test_yap_rotate/0, 
+    test_yap_difference/0, 
+    test_yap_fit/0,
+    get_puzzle/2,
+    get_tetrominoes/1,
+    try_place_piece/4,
+    test_place_piece/0,
+    calculate_remaining_space/3,
+    try_place_piece_with_rotation/5
+]).
 :- use_module(yap2pgsql).
 :- use_module(library(lists)).
 
@@ -65,4 +78,45 @@ test_yap_fit :-
 write_geometries([]).
 write_geometries([row(Name, Geom)|Rest]) :-
     write(Name), write(': '), write(Geom), nl,
-    write_geometries(Rest). 
+    write_geometries(Rest).
+
+% Get puzzle geometry from database
+get_puzzle(PuzzleName, Puzzle) :-
+    db_import('SELECT ST_AsText(geom) as geom FROM puzzles WHERE name = $1', [PuzzleName], [row(Puzzle)]).
+
+% Get all tetrominoes from database
+get_tetrominoes(Tetrominoes) :-
+    db_import('SELECT name, ST_AsText(geom) as geom FROM tetrominoes', [], Tetrominoes).
+
+% Try to place a piece at a specific position
+try_place_piece(Puzzle, Piece, Dx, Dy) :-
+    write('Trying to place piece at ('), write(Dx), write(','), write(Dy), write(')'), nl,
+    st_translate(Piece, Dx, Dy, TranslatedPiece),
+    write('Translated piece: '), write(TranslatedPiece), nl,
+    st_contains(Puzzle, TranslatedPiece, Fits),
+    write('Fits: '), write(Fits), nl,
+    Fits = t.  % PostgreSQL returns 't' for true
+
+% Calculate remaining space after placing a piece
+calculate_remaining_space(Puzzle, Piece, RemainingSpace) :-
+    st_difference(Puzzle, Piece, RemainingSpace).
+
+% Try to place a piece with rotation
+try_place_piece_with_rotation(Puzzle, Piece, Rotation, Dx, Dy) :-
+    write('Trying rotation '), write(Rotation), write(' degrees...'), nl,
+    st_rotate(Piece, Rotation, RotatedPiece),
+    write('Rotated piece: '), write(RotatedPiece), nl,
+    try_place_piece(Puzzle, RotatedPiece, Dx, Dy).
+
+% Test placing piece with rotation
+test_place_piece :-
+    write('Testing piece placement with rotation...'), nl,
+    get_puzzle('Board1', Puzzle),
+    write('Got puzzle: '), write(Puzzle), nl,
+    db_import('SELECT ST_AsText(geom) as geom FROM tetrominoes WHERE name = \'I\'', [], [row(IGeom)]),
+    write('Got piece I: '), write(IGeom), nl,
+    try_place_piece_with_rotation(Puzzle, IGeom, 90, 1, 1),
+    st_rotate(IGeom, 90, RotatedPiece),
+    st_translate(RotatedPiece, 1, 1, TranslatedPiece),
+    calculate_remaining_space(Puzzle, TranslatedPiece, RemainingSpace),
+    write('Remaining space: '), write(RemainingSpace), nl. 
