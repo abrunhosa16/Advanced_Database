@@ -10,7 +10,12 @@
     try_place_piece/4,
     test_place_piece/0,
     calculate_remaining_space/3,
-    try_place_piece_with_rotation/5
+    try_place_piece_with_rotation/5,
+    try_all_rotations/4,
+    test_all_rotations/0,
+    test_all_positions/0,
+    solve_puzzle/1,
+    test_solver/0
 ]).
 :- use_module(yap2pgsql).
 :- use_module(library(lists)).
@@ -108,15 +113,78 @@ try_place_piece_with_rotation(Puzzle, Piece, Rotation, Dx, Dy) :-
     write('Rotated piece: '), write(RotatedPiece), nl,
     try_place_piece(Puzzle, RotatedPiece, Dx, Dy).
 
-% Test placing piece with rotation
-test_place_piece :-
-    write('Testing piece placement with rotation...'), nl,
+% Test all positions and rotations
+test_all_positions :-
+    write('Testing all positions and rotations...'), nl,
     get_puzzle('Board1', Puzzle),
     write('Got puzzle: '), write(Puzzle), nl,
     db_import('SELECT ST_AsText(geom) as geom FROM tetrominoes WHERE name = \'I\'', [], [row(IGeom)]),
     write('Got piece I: '), write(IGeom), nl,
-    try_place_piece_with_rotation(Puzzle, IGeom, 90, 1, 1),
-    st_rotate(IGeom, 90, RotatedPiece),
-    st_translate(RotatedPiece, 1, 1, TranslatedPiece),
-    calculate_remaining_space(Puzzle, TranslatedPiece, RemainingSpace),
-    write('Remaining space: '), write(RemainingSpace), nl. 
+    between(0, 5, Dx),
+    between(0, 4, Dy),
+    write('Trying position ('), write(Dx), write(','), write(Dy), write(')...'), nl,
+    try_all_rotations(Puzzle, IGeom, Dx, Dy),
+    fail.  % Force backtracking to try next position
+test_all_positions.  % Succeed after trying all positions
+
+% Try all possible rotations (0, 90, 180, 270 degrees)
+try_all_rotations(Puzzle, Piece, Dx, Dy) :-
+    member(Rotation, [0, 90, 180, 270]),
+    write('  Trying rotation '), write(Rotation), write(' degrees...'), nl,
+    st_rotate(Piece, Rotation, RotatedPiece),
+    write('  Rotated piece: '), write(RotatedPiece), nl,
+    st_translate(RotatedPiece, Dx, Dy, TranslatedPiece),
+    write('  Translated piece: '), write(TranslatedPiece), nl,
+    st_contains(Puzzle, TranslatedPiece, Fits),
+    write('  Fits: '), write(Fits), nl,
+    (Fits = t -> 
+        write('  This rotation works!'), nl
+    ; 
+        write('  This rotation does not fit.'), nl
+    ),
+    fail.  % Force backtracking to try next rotation
+try_all_rotations(_, _, _, _).  % Succeed after trying all rotations
+
+% Test trying all rotations
+test_all_rotations :-
+    write('Testing all rotations...'), nl,
+    get_puzzle('Board1', Puzzle),
+    write('Got puzzle: '), write(Puzzle), nl,
+    db_import('SELECT ST_AsText(geom) as geom FROM tetrominoes WHERE name = \'I\'', [], [row(IGeom)]),
+    write('Got piece I: '), write(IGeom), nl,
+    try_all_rotations(Puzzle, IGeom, 1, 1).
+
+% Main predicate to solve the puzzle
+solve_puzzle(PuzzleName) :-
+    write('Starting to solve puzzle: '), write(PuzzleName), nl,
+    get_puzzle(PuzzleName, Puzzle),
+    get_tetrominoes(Tetrominoes),
+    write('Got tetrominoes: '), write(Tetrominoes), nl,
+    solve_puzzle_recursive(Puzzle, Tetrominoes).
+
+% Recursive predicate to solve the puzzle
+solve_puzzle_recursive(Puzzle, []) :-
+    write('All pieces placed successfully!'), nl.
+solve_puzzle_recursive(Puzzle, [row(Name, Piece)|RestPieces]) :-
+    write('Trying to place piece: '), write(Name), nl,
+    try_place_piece_with_backtracking(Puzzle, Piece, NewPuzzle),
+    write('Piece placed successfully, remaining pieces: '), write(RestPieces), nl,
+    solve_puzzle_recursive(NewPuzzle, RestPieces).
+
+% Try to place a piece with backtracking
+try_place_piece_with_backtracking(Puzzle, Piece, NewPuzzle) :-
+    between(0, 5, Dx),
+    between(0, 4, Dy),
+    member(Rotation, [0, 90, 180, 270]),
+    write('  Trying position ('), write(Dx), write(','), write(Dy), 
+    write(') with rotation '), write(Rotation), write(' degrees...'), nl,
+    st_rotate(Piece, Rotation, RotatedPiece),
+    st_translate(RotatedPiece, Dx, Dy, TranslatedPiece),
+    st_contains(Puzzle, TranslatedPiece, t),
+    write('  Piece fits!'), nl,
+    calculate_remaining_space(Puzzle, TranslatedPiece, NewPuzzle).
+
+% Test the solver
+test_solver :-
+    write('Testing puzzle solver...'), nl,
+    solve_puzzle('Board1'). 
