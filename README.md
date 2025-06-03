@@ -103,12 +103,18 @@ Before you begin, ensure you have the following installed:
 
 Installation Steps:
 1. Clone the repository:
+   ```bash
    git clone https://github.com/your-username/Advanced_Database.git
    cd Advanced_Database
+   ```
 
 2. Build the project:
-   In the project directory, run the following command to compile the source code:
-   make
+   In the project directory, run the following commands to compile the source code:
+   ```bash
+   make clean    # Clean previous builds
+   make         # Build the project
+   make install # Install the project
+   ```
 
 3. Database Setup:
    Ensure your PostgreSQL database is set up correctly. You may need to import a sample database or configure the connection to your own instance.
@@ -122,7 +128,10 @@ Installation Steps:
 
 Running the Project:
 1. Compile the project:
-   make
+   ```bash
+   make clean    # Clean previous builds
+   make         # Build the project
+   ```
 
 2. Run the solver:
    ```prolog
