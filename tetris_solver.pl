@@ -2,7 +2,8 @@
 :- use_module(library(lists)).
 
 % Helper predicate to extract geometry from row format
-extract_geometry(row(_, Geom), Geom).
+extract_geometry(row(_, Geom), Geom) :-
+    write('Debug: Extracting geometry from row: '), write(Geom), nl.
 
 % Debug predicate to print geometry
 debug_print(Label, Geom) :-
@@ -10,54 +11,61 @@ debug_print(Label, Geom) :-
 
 % Database verification
 verify_database :-
-    write('Verifying database structure...'), nl,
+    write('Debug: Starting database verification...'), nl,
     write('Checking if Puzzles table exists...'), nl,
     db_import('SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\'', [], Tables),
-    write('Available tables: '), write(Tables), nl,
+    write('Debug: Available tables: '), write(Tables), nl,
+    
+    write('Debug: Checking database connection...'), nl,
+    db_import('SELECT current_database()', [], [DB]),
+    write('Debug: Connected to database: '), write(DB), nl,
     
     write('Checking Puzzles table structure...'), nl,
     db_import('SELECT column_name, data_type FROM information_schema.columns WHERE table_name = \'puzzles\'', [], PuzzleColumns),
-    write('Puzzles table columns: '), write(PuzzleColumns), nl,
+    write('Debug: Puzzles table columns: '), write(PuzzleColumns), nl,
     
     write('Checking Tetrominoes table structure...'), nl,
     db_import('SELECT column_name, data_type FROM information_schema.columns WHERE table_name = \'tetrominoes\'', [], TetrominoColumns),
-    write('Tetrominoes table columns: '), write(TetrominoColumns), nl,
+    write('Debug: Tetrominoes table columns: '), write(TetrominoColumns), nl,
     
     write('Checking Puzzles data...'), nl,
     db_import('SELECT name, ST_AsText(geom) as geom FROM Puzzles', [], PuzzleData),
-    write('Puzzles data: '), write(PuzzleData), nl,
+    write('Debug: Puzzles data: '), write(PuzzleData), nl,
     
     write('Checking Tetrominoes data...'), nl,
     db_import('SELECT name, ST_AsText(geom) as geom FROM Tetrominoes', [], TetrominoData),
-    write('Tetrominoes data: '), write(TetrominoData), nl.
+    write('Debug: Tetrominoes data: '), write(TetrominoData), nl.
 
 % Main solving predicate
 solve_puzzle(PuzzleName, Solution) :-
-    write('Starting solve_puzzle for '), write(PuzzleName), nl,
+    write('Debug: Starting solve_puzzle for '), write(PuzzleName), nl,
     verify_database,
     get_puzzle(PuzzleName, InitialPuzzle),
+    write('Debug: After get_puzzle, InitialPuzzle = '), write(InitialPuzzle), nl,
     (InitialPuzzle = [] -> 
         write('Error: Could not find puzzle '), write(PuzzleName), nl, fail
-    ; true),
+    ; write('Debug: Puzzle found successfully'), nl),
     debug_print('Initial Puzzle', InitialPuzzle),
     get_tetrominoes(Tetrominoes),
+    write('Debug: After get_tetrominoes, Tetrominoes = '), write(Tetrominoes), nl,
     (Tetrominoes = [] ->
         write('Error: No tetrominoes found in database'), nl, fail
-    ; true),
+    ; write('Debug: Tetrominoes found successfully'), nl),
     debug_print('Tetrominoes', Tetrominoes),
     write('Starting backtracking...'), nl,
     solve_puzzle_backtrack(InitialPuzzle, Tetrominoes, [], Solution).
 
 % Base case - all tetrominoes placed
 solve_puzzle_backtrack(_, [], Solution, Solution) :-
-    write('All tetrominoes placed successfully!'), nl.
+    write('Debug: Base case reached - all tetrominoes placed'), nl.
 
 % Recursive case - try to place next tetromino
 solve_puzzle_backtrack(CurrentPuzzle, [Tetromino|Rest], PartialSolution, FinalSolution) :-
-    write('Trying to place next tetromino...'), nl,
+    write('Debug: Trying to place next tetromino...'), nl,
     debug_print('Trying tetromino', Tetromino),
     debug_print('Current puzzle', CurrentPuzzle),
     try_place_tetromino(CurrentPuzzle, Tetromino, NewPuzzle, Placement),
+    write('Debug: After try_place_tetromino'), nl,
     debug_print('Placement found', Placement),
     debug_print('New puzzle', NewPuzzle),
     solve_puzzle_backtrack(NewPuzzle, Rest, [Placement|PartialSolution], FinalSolution).
@@ -92,16 +100,18 @@ check_contiguous_space(Puzzle, Piece) :-
 
 % Database interaction predicates
 get_puzzle(PuzzleName, Puzzle) :-
+    write('Debug: Getting puzzle '), write(PuzzleName), nl,
     atomic_concat('SELECT ST_AsText(geom) FROM Puzzles WHERE name = \'', PuzzleName, N1),
     atomic_concat(N1, '\'', Query),
-    write('Executing query: '), write(Query), nl,
+    write('Debug: Formatted query: '), write(Query), nl,
     db_import(Query, [], [Row]),
+    write('Debug: Query result: '), write(Row), nl,
     extract_geometry(Row, Puzzle).
 
 get_tetrominoes(Tetrominoes) :-
-    write('Getting tetrominoes from database...'), nl,
+    write('Debug: Getting tetrominoes from database...'), nl,
     db_import('SELECT name, ST_AsText(geom) as geom FROM Tetrominoes', [], Rows),
-    write('Raw tetrominoes: '), write(Rows), nl,
+    write('Debug: Raw tetrominoes: '), write(Rows), nl,
     maplist(extract_geometry, Rows, Tetrominoes).
 
 % Geometric operations

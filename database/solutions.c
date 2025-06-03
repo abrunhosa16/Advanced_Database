@@ -63,7 +63,7 @@ typedef struct {
 void populate_solutions(PGconn *conn) {
     char query[MAX_QUERY_SIZE];
     char temp[MAX_PART_SIZE];
-    query[0] = '\0';  // initialize
+    query[0] = '\0';  
 
     strcat(query,
         "WITH board1 AS (SELECT geom AS board_geom FROM Puzzles WHERE name = 'Board1'), "
@@ -171,7 +171,6 @@ void populate_solutions(PGconn *conn) {
 
             strcat(query, temp);
 
-            // Add UNION ALL if not the last one
             if (!(i == sizeof(solutions)/sizeof(solutions[0]) - 1 && j == 6)) {
                 strcat(query, "UNION ALL ");
             }
