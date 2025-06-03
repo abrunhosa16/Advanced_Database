@@ -1,3 +1,10 @@
+:- module(yap2pgsql, [
+    db_open/5,
+    db_close/0,
+    db_query/2,
+    db_import/3
+]).
+
 :- load_foreign_files(['yap2pgsql'], [], init_predicates).
 
 % Database Connection Predicates
@@ -40,7 +47,13 @@ st_translate(Geom, X, Y, Result) :-
     atomic_concat(Q5, '))', Query),
     db_import(Query, [], [row(Result)]).
 
-st_rotate(Polygon, Angle, Result) :-
-    format(atom(Query), 'SELECT ST_AsText(ST_SnapToGrid(ST_Rotate(ST_GeomFromText(\'~w\'), radians(~w), ST_MakePoint(0,0)), 0.0001))', [Polygon, Angle]),
+st_rotate(Geom, Angle, Result) :-
+    atomic_concat('\'', Geom, G1),
+    atomic_concat(G1, '\'', G1Quote),
+    atomic_concat('SELECT ST_AsText(ST_MakeValid(ST_SnapToGrid(ST_Rotate(ST_GeomFromText(', G1Quote, Q1),
+    atomic_concat(Q1, '), radians(', Q2),
+    number_atom(Angle, AngleAtom),
+    atomic_concat(Q2, AngleAtom, Q3),
+    atomic_concat(Q3, '), ST_MakePoint(0,0)), 0.0001)))', Query),
     write('Debug - Query: '), write(Query), nl,
     db_import(Query, [], [row(Result)]).

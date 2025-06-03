@@ -1,4 +1,128 @@
-:- module(tetris_solver, [solve_puzzle/2]).
+:- module(tetris_solver, [test_db/0, test_geometries/0, test_translate/0, test_rotate/0, test_difference/0, test_fit/0]).
+:- use_module(yap2pgsql).
+:- use_module(library(lists)).
+
+% Simple test predicate to verify database connection
+test_db :-
+    write('Testing database connection...'), nl,
+    db_import('SELECT current_database()', [], [DB]),
+    write('Connected to database: '), write(DB), nl,
+    write('Testing Puzzles table...'), nl,
+    db_import('SELECT name FROM puzzles', [], Puzzles),
+    write('Puzzles found: '), write(Puzzles), nl,
+    write('Testing Tetrominoes table...'), nl,
+    db_import('SELECT name FROM tetrominoes', [], Tetrominoes),
+    write('Tetrominoes found: '), write(Tetrominoes), nl.
+
+% Test predicate to verify geometries
+test_geometries :-
+    write('Testing puzzle geometries...'), nl,
+    db_import('SELECT name, ST_AsText(geom) as geom FROM puzzles', [], PuzzleGeoms),
+    write('Puzzle geometries: '), nl,
+    write_geometries(PuzzleGeoms),
+    nl,
+    write('Testing tetromino geometries...'), nl,
+    db_import('SELECT name, ST_AsText(geom) as geom FROM tetrominoes', [], TetrominoGeoms),
+    write('Tetromino geometries: '), nl,
+    write_geometries(TetrominoGeoms).
+
+% Test predicate for translation
+test_translate :-
+    write('Testing translation of tetromino I...'), nl,
+    db_import('SELECT ST_AsText(geom) as geom FROM tetrominoes WHERE name = \'I\'', [], [row(IGeom)]),
+    write('Original I geometry: '), write(IGeom), nl,
+    atomic_concat('WITH tetromino AS (SELECT ST_GeomFromText(\'', IGeom, T1),
+    atomic_concat(T1, '\') as geom) SELECT ST_AsText(ST_Translate(geom, 1, 1)) FROM tetromino', Query),
+    db_import(Query, [], [row(TranslatedGeom)]),
+    write('Translated I geometry (dx=1, dy=1): '), write(TranslatedGeom), nl.
+
+% Test predicate for rotation
+test_rotate :-
+    write('Testing rotation of tetromino I...'), nl,
+    db_import('SELECT ST_AsText(geom) as geom FROM tetrominoes WHERE name = \'I\'', [], [row(IGeom)]),
+    write('Original I geometry: '), write(IGeom), nl,
+    st_rotate_for_solver(IGeom, 90, RotatedGeom),
+    write('Rotated I geometry (90 degrees): '), write(RotatedGeom), nl.
+
+% Test predicate for difference
+test_difference :-
+    write('Testing difference operation...'), nl,
+    db_import('SELECT ST_AsText(geom) as geom FROM puzzles WHERE name = \'Board1\'', [], [row(BoardGeom)]),
+    write('Board1 geometry: '), write(BoardGeom), nl,
+    db_import('SELECT ST_AsText(geom) as geom FROM tetrominoes WHERE name = \'I\'', [], [row(IGeom)]),
+    write('I geometry: '), write(IGeom), nl,
+    st_difference_for_solver(BoardGeom, IGeom, DiffGeom),
+    write('Difference geometry: '), write(DiffGeom), nl.
+
+% Test predicate for fit check
+test_fit :-
+    write('Testing if tetromino I fits in Board1...'), nl,
+    db_import('SELECT ST_AsText(geom) as geom FROM puzzles WHERE name = \'Board1\'', [], [row(BoardGeom)]),
+    write('Board1 geometry: '), write(BoardGeom), nl,
+    db_import('SELECT ST_AsText(geom) as geom FROM tetrominoes WHERE name = \'I\'', [], [row(IGeom)]),
+    write('I geometry: '), write(IGeom), nl,
+    st_translate_for_solver(IGeom, 1, 1, TranslatedGeom),
+    write('Translated I geometry: '), write(TranslatedGeom), nl,
+    check_fit_for_solver(BoardGeom, TranslatedGeom, Fits),
+    write('Fits: '), write(Fits), nl.
+
+% Spatial operation predicates
+st_rotate_for_solver(Geom, Angle, Result) :-
+    atomic_concat('\'', Geom, G1),
+    atomic_concat(G1, '\'', G1Quote),
+    atomic_concat('SELECT ST_AsText(ST_MakeValid(ST_SnapToGrid(ST_Rotate(ST_GeomFromText(', G1Quote, Q1),
+    atomic_concat(Q1, '), radians(', Q2),
+    number_atom(Angle, AngleAtom),
+    atomic_concat(Q2, AngleAtom, Q3),
+    atomic_concat(Q3, '), ST_MakePoint(0,0)), 0.0001)))', Query),
+    write('Debug - Query: '), write(Query), nl,
+    db_import(Query, [], [row(Result)]).
+
+st_difference_for_solver(Geom1, Geom2, Result) :-
+    atomic_concat('\'', Geom1, G1),
+    atomic_concat(G1, '\'', G1Quote),
+    atomic_concat('\'', Geom2, G2),
+    atomic_concat(G2, '\'', G2Quote),
+    atomic_concat('SELECT ST_AsText(ST_Difference(ST_GeomFromText(', G1Quote, Q1),
+    atomic_concat(Q1, '), ST_GeomFromText(', Q2),
+    atomic_concat(Q2, G2Quote, Q3),
+    atomic_concat(Q3, ')))', Query),
+    write('Debug - Query: '), write(Query), nl,
+    db_import(Query, [], [row(Result)]).
+
+st_translate_for_solver(Geom, X, Y, Result) :-
+    atomic_concat('\'', Geom, G1),
+    atomic_concat(G1, '\'', G1Quote),
+    atomic_concat('SELECT ST_AsText(ST_Translate(ST_GeomFromText(', G1Quote, Q1),
+    atomic_concat(Q1, '), ', Q2),
+    number_atom(X, XAtom),
+    atomic_concat(Q2, XAtom, Q3),
+    atomic_concat(Q3, ', ', Q4),
+    number_atom(Y, YAtom),
+    atomic_concat(Q4, YAtom, Q5),
+    atomic_concat(Q5, '))', Query),
+    db_import(Query, [], [row(Result)]).
+
+check_fit_for_solver(Geom1, Geom2, Result) :-
+    atomic_concat('\'', Geom1, G1),
+    atomic_concat(G1, '\'', G1Quote),
+    atomic_concat('\'', Geom2, G2),
+    atomic_concat(G2, '\'', G2Quote),
+    atomic_concat('SELECT ST_Contains(ST_GeomFromText(', G1Quote, Q1),
+    atomic_concat(Q1, '), ST_GeomFromText(', Q2),
+    atomic_concat(Q2, G2Quote, Q3),
+    atomic_concat(Q3, '))', Query),
+    write('Debug - Query: '), write(Query), nl,
+    db_import(Query, [], [row(Result)]).
+
+% Helper predicates for geometry testing
+write_geometries([]).
+write_geometries([row(Name, Geom)|Rest]) :-
+    write(Name), write(': '), write(Geom), nl,
+    write_geometries(Rest).
+
+% Commented out original code
+/*
 :- use_module(library(lists)).
 
 % Helper predicate to extract geometry from row format
@@ -171,4 +295,5 @@ get_rotation(270).
 
 get_translation(Dx, Dy) :-
     between(0, 6, Dx),
-    between(0, 6, Dy). 
+    between(0, 6, Dy).
+*/ 
