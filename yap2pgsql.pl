@@ -1,17 +1,20 @@
 :- load_foreign_files(['yap2pgsql'], [], init_predicates).
 
-% Database connection predicates
+% Database Connection Predicates
+
 db_open(Host, Port, DBName, User, Pass) :-
     db_connect(Host, Port, DBName, User, Pass).
 
 db_close :-
     db_disconnect.
 
-% Database query predicates
+% Database Query Predicates
+
 db_import(Query, Params, Result) :-
     db_query(Query, Params, Result).
 
-% Helper predicates for spatial operations
+% Spatial Operation Predicates
+
 st_difference(Geom1, Geom2, Result) :-
     atomic_concat('\'', Geom1, G1),
     atomic_concat(G1, '\'', G1Quote),
@@ -41,35 +44,9 @@ st_rotate(Geom, Angle, Result) :-
     atomic_concat('\'', Geom, G1),
     atomic_concat(G1, '\'', G1Quote),
     atomic_concat('SELECT ST_AsText(ST_Rotate(ST_GeomFromText(', G1Quote, Q1),
-    atomic_concat(Q1, '), ', Q2),
+    atomic_concat(Q1, '), radians(', Q2),
     number_atom(Angle, AngleAtom),
     atomic_concat(Q2, AngleAtom, Q3),
-    atomic_concat(Q3, '))', Query),
+    atomic_concat(Q3, '), ST_MakePoint(0,0)))', Query),
     write('Debug - Query: '), write(Query), nl,
     db_import(Query, [], [row(Result)]).
-
-% Test predicate
-test_connection :-
-    db_open('localhost', 5432, 'postgres', 'tvmarcon', '1234'),
-    write('Connected to database'), nl,
-    db_import('SELECT name, type FROM tetrominoes', [], Result),
-    write('Tetrominoes: '), write(Result), nl,
-    db_close,
-    write('Disconnected from database'), nl.
-
-% Test cases for spatial operations:
-% 
-% 1. Test rotation (90 degrees):
-% ?- st_rotate('POLYGON((0 0,4 0,4 1,0 1,0 0))', 90, Result).
-% Expected: POLYGON((0 0,-1.79 3.57,-2.68 3.12,-0.89 -0.44,0 0))
-%
-% 2. Test translation (move 2 units right, 3 units up):
-% ?- st_translate('POLYGON((0 0,4 0,4 1,0 1,0 0))', 2, 3, Result).
-% Expected: POLYGON((2 3,6 3,6 4,2 4,2 3))
-%
-% 3. Test difference (create a hole in a rectangle):
-% ?- st_difference('POLYGON((0 0,6 0,6 5,0 5,0 0))', 'POLYGON((2 2,3 2,3 3,2 3,2 2))', Result).
-% Expected: POLYGON((0 5,6 5,6 0,0 0,0 5),(3 2,3 3,2 3,2 2,3 2))
-%
-% Note: All tests require database connection first:
-% ?- db_open('localhost', 5432, 'postgres', 'postgres', '1234'). 
